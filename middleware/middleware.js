@@ -30,6 +30,28 @@ function authentication(){
     }
 }
 
+function authorization(role){
+    return async (req, res, next) => {   
+        try{    
+            if (req.payload.role !== role) {
+                res.statusCode = 403; //Forbidden, it means you are not authorized
+                return res.send({
+                    "success": false,
+                    "message": "You don't have access to this endpoint"
+                })
+            }
+            next();
+    } catch(e){
+        res.statusCode = 400;
+        return res.send({
+                "success": false,
+                "message": "Failed to get authorization"
+            });
+    }          
+    }
+}
+
 module.exports = {
-    authentication
+    authentication,
+    authorization
 }

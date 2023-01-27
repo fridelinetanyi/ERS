@@ -1,7 +1,29 @@
-const {submitNewReimbursementService} = require('../service/ticketService'); 
+const {submitNewReimbursementService, processReimbursementService, pendingReimbursementService, employeeReimbursementService} = require('../service/ticketService'); 
+const {authorization} = require('../middleware/middleware');
 
 const express = require('express');
 const reimbursementRouter = express.Router();
+
+reimbursementRouter.get('/reimbursements', authorization("Employee"), async (req, res) => {
+    const status = req.query.status;
+    const payload = req.payload;
+
+    const employeeReimbursements = await employeeReimbursementService(payload, status);
+
+    if (employeeReimbursements.success === true) {
+        res.send({
+            "success": employeeReimbursements.success,
+            "message": employeeReimbursements.message,
+            "reimbursementList": employeeReimbursements.reimbursementList
+        });
+    } else {
+        res.statusCode = 400;
+            res.send({
+                "success": employeeReimbursements.success,
+                "message": employeeReimbursements.message
+            })
+    }  
+});
 
 reimbursementRouter.post('/add', async (req, res) => {
     const amount = req.body.amount;
@@ -14,6 +36,7 @@ reimbursementRouter.post('/add', async (req, res) => {
                 "success": false,
                 "message": "Amount must be greater than 0"
             })
+            return;
     }
 
     if (!description) {
@@ -21,7 +44,8 @@ reimbursementRouter.post('/add', async (req, res) => {
             res.send({
                 "success": false,
                 "message": "Description is required"
-            })
+            });
+            return;
     }
 
     const reimbursement = await submitNewReimbursementService(amount, description, req.payload);
@@ -40,41 +64,42 @@ reimbursementRouter.post('/add', async (req, res) => {
     }  
 });
 
-// reimbursementRouter.get('/:status', async (req, res) => {
-//     const amount = req.body.amount;
-//     const description = req.body.description;
+reimbursementRouter.patch('/update', authorization("Finance Manager"), async (req, res) => {    
+    const reimbursementId = req.body.reimbursementId;
+    const status = req.body.status;
 
-//     //If amount doesn't exist OR amount exists but is less than 0
-//     if (!amount || (amount && amount <= 0)) {
-//         res.statusCode = 400;
-//             res.send({
-//                 "success": false,
-//                 "message": "Amount must be greater than 0"
-//             })
-//     }
+    const reimbursement = await processReimbursementService(reimbursementId, status);
 
-//     if (!description) {
-//         res.statusCode = 400;
-//             res.send({
-//                 "success": false,
-//                 "message": "Description is required"
-//             })
-//     }
+    if (reimbursement.success === true) {
+        res.send({
+            "success": reimbursement.success,
+            "message": reimbursement.message
+        });
+    } else {
+        res.statusCode = 400;
+            res.send({
+                "success": reimbursement.success,
+                "message": reimbursement.message
+            })
+    }  
+});
 
-//     const reimbursement = submitNewReimbursementService(amount, description);
+reimbursementRouter.get('/pending', authorization("Finance Manager"), async (req, res) => {    
+    const pendingReimbursements = await pendingReimbursementService();
 
-//     if (reimbursement.success === true) {
-//         res.send({
-//             "success": reimbursement.success,
-//             "message": reimbursement.message
-//         });
-//     } else {
-//         res.statusCode = 400;
-//             res.send({
-//                 "success": reimbursement.success,
-//                 "message": reimbursement.message
-//             })
-//     }  
-// });
+    if (pendingReimbursements.success === true) {
+        res.send({
+            "success": pendingReimbursements.success,
+            "message": pendingReimbursements.message,
+            "reimbursementList": pendingReimbursements.reimbursementList
+        });
+    } else {
+        res.statusCode = 400;
+            res.send({
+                "success": pendingReimbursements.success,
+                "message": pendingReimbursements.message
+            })
+    }  
+});
 
 module.exports = reimbursementRouter;
