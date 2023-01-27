@@ -10,13 +10,14 @@ app.use(bodyParser.json());
 
 const PORT = 3000;
 
+//Login endpoint
 app.post('/login', async (req, res) => {
     const username = req.body.username;
     const password = req.body.password;
 
     if (!username || !password) {
         res.statusCode = 400;
-            res.send({
+        return res.send({
                 "message": "username or password cannot be empty"
             })
     }
@@ -40,14 +41,15 @@ app.post('/login', async (req, res) => {
     }
 });
 
+//New account registration endpoint
 app.post('/register', async (req, res) => {
     const username = req.body.username;
     const password = req.body.password;
 
     if (!username || !password) {
         res.statusCode = 400;
-            res.send({
-                "success": user.success,
+        return res.send({
+                "success": false,
                 "message": "username or password cannot be empty"
             })
     }
@@ -57,8 +59,7 @@ app.post('/register', async (req, res) => {
     if (user.success === true) {
         res.send({
             "success": user.success,
-            "message": user.message,
-            "token": user.token 
+            "message": user.message
         });
     } else {
         res.statusCode = 400;
@@ -69,8 +70,10 @@ app.post('/register', async (req, res) => {
     }
 });
 
+//Authentication middleware
 app.use(authentication());
 
+//Reimbursement router
 app.use('/reimbursement', reimbursementRouter);
 
 app.listen(PORT, () => {

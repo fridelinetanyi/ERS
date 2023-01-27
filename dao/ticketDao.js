@@ -8,6 +8,7 @@ AWS.config.update({
 
 const docClient = new AWS.DynamoDB.DocumentClient();
 
+//Retrieve user id and save new employee reimbursement ticket
 async function submitNewReimbursementDao(amount, description, payload, status) {
 
     let user = await retrieveUserByUsername(payload.username);
@@ -32,6 +33,7 @@ async function submitNewReimbursementDao(amount, description, payload, status) {
     } 
 }
 
+//DB request to save new reimbursement
 function saveReimbursement(userId, amount, description, status) {
     const params = {
         TableName: 'reimbursements',
@@ -47,6 +49,7 @@ function saveReimbursement(userId, amount, description, status) {
     return docClient.put(params).promise();
 }
 
+//Get reimbursement id to use it to process (approve or deny) reimbursement by manager
 async function processReimbursementDao(reimbursementId, status) {
     let reimbursement = await getReimbursementById(reimbursementId);
 
@@ -78,6 +81,7 @@ async function processReimbursementDao(reimbursementId, status) {
     }
 }
 
+//DB request to process (approve or deny) reimbursement
 function updateReimbursementStatus(reimbursementId, status) {
     const params = {
         TableName: 'reimbursements',
@@ -96,6 +100,7 @@ function updateReimbursementStatus(reimbursementId, status) {
     return docClient.update(params).promise();
 }
 
+//DB request to get reimbursement by id
 function getReimbursementById(reimbursementId) {
     const params = {
         TableName: 'reimbursements',
@@ -107,6 +112,7 @@ function getReimbursementById(reimbursementId) {
     return docClient.get(params).promise();
 }
 
+//Get all pending reimbursement for managers
 async function pendingReimbursementDao(status) {
     let allReimbursements = await getAllReimbursementsByStatus(status);
 
@@ -124,6 +130,7 @@ async function pendingReimbursementDao(status) {
     }
 }
 
+//DB request to get all reimbursements by status for employee
 function getAllReimbursementsByStatus(status) {
     const params = {
         TableName: 'reimbursements',
@@ -144,6 +151,7 @@ function getAllReimbursementsByStatus(status) {
     return docClient.query(params).promise();
 }
 
+//Get employee by username and use userId to get employee reimbursements by status
 async function employeeReimbursementDao(payload, status) {
     let user = await retrieveUserByUsername(payload.username);
 
@@ -168,9 +176,11 @@ async function employeeReimbursementDao(payload, status) {
     }
 }
 
+//DB request to get employee reimbursement by status, undefined status means to get all reimbursements
 function getEmployeeReimbursementsByStatus(userId, status) {
     let params;
     if (!status) {
+        //Get all reimbursements by user Id
         params = {
             TableName: 'reimbursements',
             IndexName: 'reimbursement_user_id-index',
@@ -187,6 +197,7 @@ function getEmployeeReimbursementsByStatus(userId, status) {
             ProjectionExpression: '#a, #d, #s'
         };
     } else {
+        //Get All reimbursements by user Id and status
         params = {
             TableName: 'reimbursements',
             IndexName: 'reimbursement_user_id-index',

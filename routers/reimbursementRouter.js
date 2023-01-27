@@ -4,7 +4,8 @@ const {authorization} = require('../middleware/middleware');
 const express = require('express');
 const reimbursementRouter = express.Router();
 
-reimbursementRouter.get('/reimbursements', authorization("Employee"), async (req, res) => {
+//Reimbursement endpoint to get all reimbursement by status for employees
+reimbursementRouter.get('/reimbursements', async (req, res) => {
     const status = req.query.status;
     const payload = req.payload;
 
@@ -25,6 +26,7 @@ reimbursementRouter.get('/reimbursements', authorization("Employee"), async (req
     }  
 });
 
+//Reimbursement endpoint to add a new reimbursement
 reimbursementRouter.post('/add', async (req, res) => {
     const amount = req.body.amount;
     const description = req.body.description;
@@ -39,6 +41,7 @@ reimbursementRouter.post('/add', async (req, res) => {
             return;
     }
 
+    //Check if description exists
     if (!description) {
         res.statusCode = 400;
             res.send({
@@ -52,18 +55,19 @@ reimbursementRouter.post('/add', async (req, res) => {
 
     if (reimbursement.success === true) {
         res.send({
-            "success": reimbursement.success,
+            "success": reimbursement.success,  //reimbursement was successfully added
             "message": reimbursement.message
         });
     } else {
         res.statusCode = 400;
             res.send({
-                "success": reimbursement.success,
+                "success": reimbursement.success,  // reimbursement was not added
                 "message": reimbursement.message
             })
     }  
 });
 
+//Reimbursement endpoint to update/process (approve or deny) reimbursement for managers
 reimbursementRouter.patch('/update', authorization("Finance Manager"), async (req, res) => {    
     const reimbursementId = req.body.reimbursementId;
     const status = req.body.status;
@@ -84,6 +88,7 @@ reimbursementRouter.patch('/update', authorization("Finance Manager"), async (re
     }  
 });
 
+//Reimbursement endpoint to get all pending reimbursements for managers
 reimbursementRouter.get('/pending', authorization("Finance Manager"), async (req, res) => {    
     const pendingReimbursements = await pendingReimbursementService();
 
