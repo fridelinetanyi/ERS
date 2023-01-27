@@ -7,6 +7,7 @@ AWS.config.update({
 
 const docClient = new AWS.DynamoDB.DocumentClient();
 
+//DB Request to get user by username
 function retrieveUserByUsername(username) {
     const params = {
         TableName: 'users',
@@ -23,18 +24,19 @@ function retrieveUserByUsername(username) {
     return docClient.query(params).promise();
 }
 
+//Retrieve user and check if the password is correct to login 
 async function loginDao(username, password) {
     
     let user = await retrieveUserByUsername(username);
 
-    if (!user.Items) {
+    if (!user.Count) {
         return {
             success: false,
             message: `User with username ${username} does not exist`
         }
     }
 
-    if (user.Items[0].password === password) { 
+    if (user.Items[0] && user.Items[0].password === password) { 
         return {
             username: user.Items[0].username,
             role: user.Items[0].role,
@@ -49,6 +51,7 @@ async function loginDao(username, password) {
     }
 }
 
+//Retrieve user and check if username is free to use for registration
 async function registerDao(username, password, role) {
     let user = await retrieveUserByUsername(username);
 
@@ -74,7 +77,7 @@ async function registerDao(username, password, role) {
     }  
 }
 
-
+//DB request to save new user after registration
 async function saveUser(username, password, role) {
     const params = {
         TableName: 'users',

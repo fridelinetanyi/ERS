@@ -5,6 +5,7 @@ const { DocumentClient } = require('aws-sdk/clients/dynamodb');
 
 const SECRET_KEY = 'thisisasecret'
 
+//Create JWT
 function createJWT(username, role) {
     return jwt.sign({
         username,
